@@ -4,7 +4,7 @@
 
 ## 規格
 
-前端 - [React.js](https://zh-hant.reactjs.org/)
+前端 - [React.js](https://zh-hant.reactjs.org/). \
 Design System - [Ant Design](https://ant.design/?theme=dark)
 
 Made with ❤️ By 237T
