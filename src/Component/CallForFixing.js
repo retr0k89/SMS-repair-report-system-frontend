@@ -35,7 +35,13 @@ const CallForFixing = () => {
     const [confirmationModalStatus, setConfirmationModalStatus] = useState(false)
 
     useEffect(() => {
-        axios.get("http://127.0.0.1:8000/welcome/api/fetchUnit")
+        md5alterVerify()
+        identityVerify()
+        if(sessionStorage.getItem("username") === null) {
+            window.location.href = "/login"
+        }
+
+        axios.get(`http://${sessionStorage.getItem("server")}:8000/welcome/api/fetchUnit`)
         .then(res => {
             res.data.map((unit) => {
                 setUnitOptions(unitOptions => [...unitOptions, {value: unit[0], label: unit[1]}])
@@ -44,7 +50,7 @@ const CallForFixing = () => {
     }, [])
 
     useEffect(() => {
-        axios.post("http://127.0.0.1:8000/welcome/api/fetchRepairItem", {
+        axios.post(`http://${sessionStorage.getItem("server")}:8000/welcome/api/fetchRepairItem`, {
             unit_id: choosenUnit
         })
         .then(res => {
@@ -57,6 +63,38 @@ const CallForFixing = () => {
             })
         })
     }, [choosenUnit])
+
+    const md5alterVerify = () => {
+        axios.post(`http://${sessionStorage.getItem("server")}:8000/welcome/api/md5alternation`, {
+            md5: sessionStorage.getItem("md5")
+        })
+        .then(res => {
+            if (res.data === "md5 altered") {
+                alert("md5 altered")
+                sessionStorage.clear()
+                window.location.href = "/login"
+            }
+        })
+    }
+
+    const identityVerify = () => {
+        axios.post(`http://${sessionStorage.getItem("server")}:8000/welcome/api/identityVerify`, {
+            md5: sessionStorage.getItem("md5")
+        })
+            .then(res => {
+                if ((sessionStorage.getItem("userGroupName" !== res.data[0][1])) || (sessionStorage.getItem("userLevel" !== res.data[0][2])) || (sessionStorage.getItem("username" !== res.data[0][3])) || (sessionStorage.getItem("userPermission") !== res.data[0][5]) || (sessionStorage.getItem("sfsPermission") !== res.data[0][6]) || (sessionStorage.getItem("carDistributionSysPermission") !== res.data[0][7])) {
+                    // alert("forge found")
+                    sessionStorage.setItem("userGroupName", res.data[0][1])
+                    sessionStorage.setItem("userLevel", res.data[0][2])
+                    sessionStorage.setItem("username", res.data[0][3])
+                    sessionStorage.setItem("userPermission", res.data[0][5])
+                    sessionStorage.setItem("sfsPermission", res.data[0][6])
+                    sessionStorage.setItem("carDistributionSysPermission", res.data[0][7])
+                    sessionStorage.setItem("cID", res.data[0][8])
+                    sessionStorage.setItem("md5", res.data[0][9])
+                }
+            })
+    }
 
     const error = (msg) => {
         messageApi.open({
@@ -127,7 +165,7 @@ const CallForFixing = () => {
     }
 
     const modalClickOK = () => {
-        axios.post("http://127.0.0.1:8000/welcome/api/receivedRepairItem", {
+        axios.post(`http://${sessionStorage.getItem("server")}:8000/welcome/api/receivedRepairItem`, {
             notify_unit: formItemData["notifyUnit"],
             repair_item: formItemData["awaitRepairItem"],
             others: formItemData["others"],
@@ -202,15 +240,6 @@ const CallForFixing = () => {
                         <Input status={formItemState["breakdownLocation"]}/>
                     </Form.Item>
                 </div>
-{/* 
-                <div style={{marginTop: 20}}>
-                    <Form.Item name="fillinUnit" label="填報單位:">
-                        <Input status={formItemState["fillinUnit"]}/>
-                        <Select status={formItemState["notifyUnit"]} onChange={setChoosenNotifyUnit} options={unitOptions}>  
-
-                        </Select>
-                    </Form.Item>
-                </div> */}
 
                 <Form.Item>
                     <Button type="primary" htmlType="submit">送出</Button>

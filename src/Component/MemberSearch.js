@@ -1,4 +1,4 @@
-/* eslint-disable jsx-a11y/anchor-has-content */
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import React, { useEffect, useState } from "react";
 import axios from 'axios';
@@ -14,7 +14,7 @@ const MemberSearch = () => {
     const [password, setPassword] = useState('testing')
     const [form] = Form.useForm();
 
-    const columns =[
+    const columns = [
         {
             title: "編號",
             dataIndex: "number",
@@ -60,45 +60,82 @@ const MemberSearch = () => {
             key: 'action',
             render: (_, record) => (
                 <Space size="middle">
-                    <a onClick={e => {edit(e, record)}}>編輯</a>
-                    
+                    <a onClick={e => { edit(e, record) }}>編輯</a>
+
                     <Popconfirm
                         title="確定要刪除嗎?"
                         description="請點選確認刪除"
                         okText="確認"
                         cancelText="取消"
-                        onConfirm={e => {deleteOnRow(e, record)}}
+                        onConfirm={e => { deleteOnRow(e, record) }}
                     >
                         <a>刪除</a>
                     </Popconfirm>
-                    
+
                 </Space>
             ),
         },
     ]
 
     useEffect(() => {
-       dataFetch()
+        md5alterVerify()
+        identityVerify()
+        if (sessionStorage.getItem("username") === null) {
+            window.location.href = "/login"
+        }
+
+        dataFetch()
     }, [])
+
+    const md5alterVerify = () => {
+        axios.post(`http://${sessionStorage.getItem("server")}:8000/welcome/api/md5alternation`, {
+            md5: sessionStorage.getItem("md5")
+        })
+        .then(res => {
+            if (res.data === "md5 altered") {
+                alert("md5 altered")
+                sessionStorage.clear()
+                window.location.href = "/login"
+            }
+        })
+    }
+
+    const identityVerify = () => {
+        axios.post(`http://${sessionStorage.getItem("server")}:8000/welcome/api/identityVerify`, {
+            md5: sessionStorage.getItem("md5")
+        })
+            .then(res => {
+                if ((sessionStorage.getItem("userGroupName" !== res.data[0][1])) || (sessionStorage.getItem("userLevel" !== res.data[0][2])) || (sessionStorage.getItem("username" !== res.data[0][3])) || (sessionStorage.getItem("userPermission") !== res.data[0][5]) || (sessionStorage.getItem("sfsPermission") !== res.data[0][6]) || (sessionStorage.getItem("carDistributionSysPermission") !== res.data[0][7])) {
+                    sessionStorage.setItem("userGroupName", res.data[0][1])
+                    sessionStorage.setItem("userLevel", res.data[0][2])
+                    sessionStorage.setItem("username", res.data[0][3])
+                    sessionStorage.setItem("userPermission", res.data[0][5])
+                    sessionStorage.setItem("sfsPermission", res.data[0][6])
+                    sessionStorage.setItem("carDistributionSysPermission", res.data[0][7])
+                    sessionStorage.setItem("cID", res.data[0][8])
+                    sessionStorage.setItem("md5", res.data[0][9])
+                }
+            })
+    }
 
     const dataFetch = () => {
         var dataList = []
-        axios.get("http://127.0.0.1:8000/welcome/api/member")
-        .then(res => {
-            res.data.forEach(element => {
-                dataList.push({
-                    number: element[0],
-                    unit: element[1],
-                    authority: element[2],
-                    username: element[3],
-                    password: element[4],
-                    sysAuthority: element[5],
-                    fixReportAuthority: element[6],
-                    carDistributionAuthority: element[7],
-                })
-            });
-            setData(dataList)
-        })
+        axios.get(`http://${sessionStorage.getItem("server")}:8000/welcome/api/member`)
+            .then(res => {
+                res.data.forEach(element => {
+                    dataList.push({
+                        number: element[0],
+                        unit: element[1],
+                        authority: element[2],
+                        username: element[3],
+                        password: element[4],
+                        sysAuthority: element[5],
+                        fixReportAuthority: element[6],
+                        carDistributionAuthority: element[7],
+                    })
+                });
+                setData(dataList)
+            })
     }
 
     const edit = (e, record) => {
@@ -108,27 +145,27 @@ const MemberSearch = () => {
     }
 
     const deleteOnRow = (e, record) => {
-        axios.post("http://127.0.0.1:8000/welcome/api/deleteMemberData", {
+        axios.post(`http://${sessionStorage.getItem("server")}:8000/welcome/api/deleteMemberData`, {
             id: record.number,
         })
-        .then(res => {
-            dataFetch()
-        })
+            .then(res => {
+                dataFetch()
+            })
     }
 
     const editModalhandleOK = (e) => {
         setEditModalStatus(false)
 
-        axios.post("http://127.0.0.1:8000/welcome/api/updateMemberData", {
+        axios.post(`http://${sessionStorage.getItem("server")}:8000/welcome/api/updateMemberData`, {
             id: currentID,
             password: password,
             userAuthority: currentUserAuthority,
             fixReportAuthority: currentFixReportAuthority,
             vechielDistributionAuthority: currentVechielDistributionAuthority
         })
-        .then(res => {
-            dataFetch()
-        })
+            .then(res => {
+                dataFetch()
+            })
     }
 
     const editModalhandleCancel = () => {
@@ -144,7 +181,7 @@ const MemberSearch = () => {
 
     return (
         <>
-            <Breadcrumb separator="" style={{marginTop: "1%", marginLeft: "1%"}}>
+            <Breadcrumb separator="" style={{ marginTop: "1%", marginLeft: "1%" }}>
                 <Breadcrumb.Item>現在位置: </Breadcrumb.Item>
                 <Breadcrumb.Separator>:</Breadcrumb.Separator>
                 <Breadcrumb.Item >管理者功能權限</Breadcrumb.Item>
@@ -152,52 +189,52 @@ const MemberSearch = () => {
                 <Breadcrumb.Item >會員查詢</Breadcrumb.Item>
             </Breadcrumb>
 
-            <Table bordered pagination={{pageSize: 50,}} scroll={{y: 700}} columns={columns} dataSource={data} style={{marginTop: "2%"}}/>
+            <Table bordered pagination={{ pageSize: 50, }} scroll={{ y: 700 }} columns={columns} dataSource={data} style={{ marginTop: "2%" }} />
 
             <div> {/* Modal for 編輯 */}
                 <Modal title="修改使用者資料" open={editModalStatus} onCancel={editModalhandleCancel} onOk={editModalhandleOK}>
                     <div>
-                        <div style={{float: "left", width: "25%", marginTop: 4}}>使用者密碼:</div>
+                        <div style={{ float: "left", width: "25%", marginTop: 4 }}>使用者密碼:</div>
                         <div>
-                            <Form style={{width: "50%"}} form={form}>
+                            <Form style={{ width: "50%" }} form={form}>
                                 <Form.Item name="username" rules={[{ required: true }]}>
-                                    <Input onChange={e => {setPassword(e.target.value)}}/>
+                                    <Input onChange={e => { setPassword(e.target.value) }} />
                                 </Form.Item>
                             </Form>
                         </div>
                     </div>
 
                     <div>
-                        <div style={{float: "left", width: "25%", marginTop: 4}}>使用者系統權限:</div>
+                        <div style={{ float: "left", width: "25%", marginTop: 4 }}>使用者系統權限:</div>
                         <div>
-                            <Radio.Group onChange={e => {setCurrentUserAuthority(e.target.value)}} defaultValue="user">
+                            <Radio.Group onChange={e => { setCurrentUserAuthority(e.target.value) }} defaultValue="user">
                                 <Radio.Button value="user">使用者</Radio.Button>
                                 <Radio.Button value="manager">管理員</Radio.Button>
                             </Radio.Group>
                         </div>
                     </div>
 
-                    <div style={{marginTop: 20}}>
-                        <div style={{float: "left", width: "25%", marginTop: 4}}>報修系統權限:</div>
+                    <div style={{ marginTop: 20 }}>
+                        <div style={{ float: "left", width: "25%", marginTop: 4 }}>報修系統權限:</div>
                         <div>
-                            <Radio.Group onChange={e => {setCurrentFixReportAuthority(e.target.value)}} defaultValue="squadron">
+                            <Radio.Group onChange={e => { setCurrentFixReportAuthority(e.target.value) }} defaultValue="squadron">
                                 <Radio.Button value="squadron">一般中隊</Radio.Button>
                                 <Radio.Button value="manager">管理員</Radio.Button>
                                 <Radio.Button value="repaireManagement">維修管理(班本)</Radio.Button>
                             </Radio.Group>
                         </div>
                     </div>
-                    
-                    <div style={{marginTop: 20}}>
-                        <div style={{float: "left", width: "25%", marginTop: 4}}>派車系統權限:</div>
+
+                    <div style={{ marginTop: 20 }}>
+                        <div style={{ float: "left", width: "25%", marginTop: 4 }}>派車系統權限:</div>
                         <div>
-                            <Radio.Group onChange={e => {setCurrentVechielDistributionAuthority(e.target.value)}} defaultValue="squadron">
+                            <Radio.Group onChange={e => { setCurrentVechielDistributionAuthority(e.target.value) }} defaultValue="squadron">
                                 <Radio.Button value="squadron">一般中隊</Radio.Button>
                                 <Radio.Button value="manager">管理員</Radio.Button>
                             </Radio.Group>
                         </div>
                     </div>
-                 
+
                 </Modal>
             </div>
         </>
